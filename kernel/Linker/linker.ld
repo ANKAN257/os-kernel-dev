@@ -1,20 +1,24 @@
-
-
-ENTRY(_start)
-
 SECTIONS
 {
-    . = 1M;
-
     .text : {
-        *(.multiboot)
-        *(.text*)
+        *(.text)
+    } :text
+
+    .rodata : {
+        *(.rodata)
     }
 
-    .rodata : { *(.rodata*) }
-    .data : { *(.data*) }
-    .bss : {
-        *(.bss*)
-        *(COMMON)
+    .data : {
+        *(.data)
     }
+
+    .bss : {
+        *(.bss COMMON)
+    }
+}
+
+PHDRS
+{
+    text PT_LOAD FLAGS(0x5); /* R + X */
+    data PT_LOAD FLAGS(0x6); /* R + W */
 }

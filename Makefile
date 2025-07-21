@@ -2,59 +2,61 @@
 # 🔧 CONFIGURATION SECTION
 # ===========================
 
-# Automatically find source files
-C_SOURCES     := $(shell find kernel -name "*.c")
-ASM_SOURCES   := $(shell find kernel -name "*.S")
-# NASM_SOURCES  := $(shell find kernel -name "*.asm")
+# Find all C and Assembly source files in the kernel directory
+C_SOURCES := $(shell find kernel -name "*.c")
+ASM_SOURCES := $(shell find kernel -name "*.S")
 
-# Convert source files to object files
-C_OBJECTS     := $(C_SOURCES:.c=.o)
-ASM_OBJECTS   := $(ASM_SOURCES:.S=.o)
-# NASM_OBJECTS  := $(NASM_SOURCES:.asm=.o)
 
-# Combine all object files
-ALL_OBJECTS   := $(C_OBJECTS) $(ASM_OBJECTS) 
 
-# Output binaries
-KERNEL_BIN    := kernel.bin
-ISO_NAME      := catkernel.iso
-ISO_DIR       := iso
-GRUB_CFG      := boot/grub/grub.cfg
 
-# Tools
-CC            := gcc
-AS            := nasm
-LD            := ld
 
-# Flags
-CFLAGS        := -m32 -ffreestanding -nostdlib -fno-pic -fno-pie
-# ASFLAGS       := -f elf32
-LDFLAGS       := -m elf_i386 -T kernel/Linker/linker.ld
+# Convert them into object file names
+C_OBJECTS   := $(C_SOURCES:.c=.o)
+ASM_OBJECTS := $(ASM_SOURCES:.S=.o)
 
-# Include directories from kernel/
-INCLUDE_DIRS  := $(shell find kernel -type d)
-CFLAGS       += $(patsubst %, -I%, $(INCLUDE_DIRS))
+# All object files to be linked
+ALL_OBJECTS := $(C_OBJECTS) $(ASM_OBJECTS)
+
+# Output binary and ISO file
+KERNEL_BIN  := kernel.bin
+ISO_NAME    := catkernel.iso
+ISO_DIR     := iso
+GRUB_CFG    := boot/grub/grub.cfg
+
+# Compilers and Linker
+CC := gcc
+LD := ld
+
+# Compiler Flags
+# -m32 => 32-bit mode
+# -ffreestanding => no standard library
+# -nostdlib => don't use the host system libraries
+# -fno-pic & -fno-pie => disable position-independent code
+CFLAGS  := -m32 -ffreestanding -nostdlib -fno-pic -fno-pie
+
+# Linker Flags with linker script
+LDFLAGS := -m elf_i386 -T kernel/Linker/linker.ld
+
+# Automatically include header paths
+INCLUDE_DIRS := $(shell find kernel -type d)
+CFLAGS += $(patsubst %, -I%, $(INCLUDE_DIRS))
 
 # ===========================
 # 🛠️ BUILD RULES
 # ===========================
 
-# Default target
+# Default target to build the kernel
 all: $(KERNEL_BIN)
 
-# C to object
+# Rule to compile C source files to object files
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# AT&T Assembly to object
+# Rule to compile Assembly source files to object files
 %.o: %.S
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# NASM Assembly to object
-# %.o: %.asm
-# 	$(AS) $(ASFLAGS) $< -o $@
-
-# Link all objects into kernel binary
+# Link all object files into a final kernel binary
 $(KERNEL_BIN): $(ALL_OBJECTS)
 	$(LD) $(LDFLAGS) -o $@ $(ALL_OBJECTS)
 
@@ -62,6 +64,7 @@ $(KERNEL_BIN): $(ALL_OBJECTS)
 # 💿 ISO CREATION
 # ===========================
 
+# Build a bootable ISO using GRUB
 iso: $(KERNEL_BIN)
 	mkdir -p $(ISO_DIR)/boot/grub
 	cp $(KERNEL_BIN) $(ISO_DIR)/boot/kernel.bin
@@ -72,6 +75,7 @@ iso: $(KERNEL_BIN)
 # 🚀 RUN IN QEMU
 # ===========================
 
+# Run the kernel in QEMU emulator
 run: iso
 	qemu-system-i386 -cdrom $(ISO_NAME)
 
@@ -79,6 +83,8 @@ run: iso
 # 🧹 CLEANUP
 # ===========================
 
+# Clean up build files
 clean:
 	rm -f $(ALL_OBJECTS) $(KERNEL_BIN) $(ISO_NAME)
+	rm -rf *.o */*.o */*/*.o *.bin *.iso
 	rm -rf $(ISO_DIR)
