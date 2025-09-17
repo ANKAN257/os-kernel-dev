@@ -19,7 +19,7 @@ void c_kernel_main() {
     println("GDT, IDT, ISR, and IRQ loaded!\n");
     println("Press any key to test IRQ1 (keyboard)... \n");
 
-    print("Kernel initialized successfully.\n");
+    // print("Kernel initialized successfully.\n");
 
     asm volatile("sti"); // enable interrupts
 
