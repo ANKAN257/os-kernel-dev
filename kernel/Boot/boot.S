@@ -1,24 +1,19 @@
-
-# boot.S
 .set MULTIBOOT_MAGIC, 0x1BADB002
-.set MULTIBOOT_FLAGS, 0x0
-.set MULTIBOOT_CHECKSUM, -(MULTIBOOT_MAGIC + MULTIBOOT_FLAGS)
+.set MULTIBOOT_FLAGS, 0
+.set CHECKSUM, -(MULTIBOOT_MAGIC + MULTIBOOT_FLAGS)
 
 .section .multiboot
     .long MULTIBOOT_MAGIC
     .long MULTIBOOT_FLAGS
-    .long MULTIBOOT_CHECKSUM
+    .long CHECKSUM
 
 .section .text
 .global _start
-.extern c_kernel_main
+.extern load_gdt
 
 _start:
-    call load_gdt         # Load GDT before jumping to C code
-   # call c_kernel_main
-    
-
+    call load_gdt        # Let GDT file do everything (including calling C)
+halt:
     cli
-.hang:
     hlt
-    jmp .hang
+    jmp halt
